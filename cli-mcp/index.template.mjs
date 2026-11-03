@@ -26,8 +26,8 @@ const DEFAULT_TIMEOUT_SEC = Number(process.env.DSH_CLI_MCP_TIMEOUT || 240);
 const WIN_PATH_ADDITIONS = process.platform === "win32"
   ? [
       "C:\\Program Files\\nodejs",
-      // <YOUR-NPM-GLOBAL-BIN-DIR>          e.g. "C:\\Users\\<you>\\AppData\\Roaming\\npm"
-      // <YOUR-CODEX-BIN-DIR>               e.g. "C:\\Users\\<you>\\AppData\\Local\\Programs\\OpenAI\\Codex\\bin"
+      // <YOUR-NPM-GLOBAL-BIN-DIR>          e.g. "C:\\Users\\HUAWEI\\AppData\\Roaming\\npm"
+      // <YOUR-CODEX-BIN-DIR>               e.g. "C:\\Users\\HUAWEI\\AppData\\Local\\Programs\\OpenAI\\Codex\\bin"
     ]
   : [];
 const PATCHED_PATH = [WIN_PATH_ADDITIONS.filter(Boolean).join(";"), process.env.PATH || ""].join(";");
@@ -148,7 +148,7 @@ const ENGINES = {
       if (key) env.QWENCLOUD_API_KEY = key;
       env.QWEN_CODE_NO_RELAUNCH = "true";
       // Replace with YOUR qwen home dir (forward slashes!):
-      const qwenHome = "<QWEN_HOME_DIR>";  // e.g. "C:/Users/<you>/.qwen"
+      const qwenHome = "<QWEN_HOME_DIR>";  // e.g. "C:/Users/HUAWEI/.qwen"
       try { if (existsSync(qwenHome)) env.QWEN_HOME = qwenHome; } catch {}
       return env;
     },
@@ -176,7 +176,7 @@ const ENGINES = {
 
   agy: {
     // Antigravity CLI (Go binary). Replace with YOUR agy.exe path.
-    bin: "<AGY_EXE_PATH>",  // e.g. "C:\\Users\\<you>\\AppData\\Local\\agy\\bin\\agy.exe"
+    bin: "<AGY_EXE_PATH>",  // e.g. "C:\\Users\\HUAWEI\\AppData\\Local\\agy\\bin\\agy.exe"
     stdio: "ignore",
     args: (p, o) => {
       const q = (s) => (process.platform === "win32" ? `"${s}"` : s);

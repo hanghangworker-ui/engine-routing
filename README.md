@@ -64,7 +64,7 @@ node --check cli-mcp\index.mjs
 打开 `cli-mcp/index.mjs`（§0 复制出来的），替换所有 `<占位符>`：
 
 - `WIN_PATH_ADDITIONS` 里的 `<YOUR-NPM-GLOBAL-BIN-DIR>`、`<YOUR-CODEX-BIN-DIR>` → 你本机的 npm 全局 bin / codex bin 绝对路径
-- qwen spec：`<QWEN_CODE_PACKAGE_DIR>`（**正斜杠**，如 `D:/npm-global/node_modules/@qwen-code/qwen-code`）、`<QWEN_HOME_DIR>`（**正斜杠**，如 `C:/Users/<you>/.qwen`）
+- qwen spec：`<QWEN_CODE_PACKAGE_DIR>`（**正斜杠**，如 `D:/npm-global/node_modules/@qwen-code/qwen-code`）、`<QWEN_HOME_DIR>`（**正斜杠**，如 `C:/Users/HUAWEI/.qwen`）
 - agy spec：`<AGY_EXE_PATH>` → 你的 agy.exe 绝对路径
 - 代理：若你的 OpenAI/codex/claude 需走代理，把注释掉的 `HTTP_PROXY/HTTPS_PROXY/ALL_PROXY` 三行取消注释并填 `http://<你的代理>`
 
