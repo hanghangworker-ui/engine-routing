@@ -9,7 +9,7 @@
 
 ```powershell
 # 1. clone
-git clone https://github.com/<you>/engine-routing.git
+git clone https://github.com/hanghangworker-ui/engine-routing.git
 cd engine-routing
 
 # 2. 把模板桥复制出来并改成你自己的（替换所有 <占位符>）
