@@ -3,7 +3,7 @@
  * cli-mcp — minimal stdio MCP server that exposes coding-agent CLIs
  * (claude / codex / codebuddy / qwen / agy) as MCP tools.
  *
- * Template: replace ALL <PLACEHOLDER> tokens with your own values.
+ * Template: replace all <YOUR-*> tokens with your own values.
  * No dependencies, Node 18+.
  *
  * Env vars:
