@@ -19,7 +19,7 @@ argument-hint: [engine]
 | 国内落地 / 中文项目 / 收尾验证 | `codebuddy` | 中文生态稳 |
 | 架构 / 复杂 bug / 跨文件重构 | `codex` | 默认 gpt-6.1-sol |
 | 最难的活 / 6.1-sol 跑歪升级 | `codex` + `model:"gpt-6-astra"` | 切前报备，烧额度快 |
-| 最高难度决策 / 终审复核 | `claude` | clodex.cc 代理 |
+| 最高难度决策 / 终审复核 | `claude` | 走代理 |
 | gemini 系交叉验证 | `agy` | 地域受限时跳过 |
 
 ## 派单动作
@@ -34,14 +34,21 @@ argument-hint: [engine]
 | `agy_` | `mcp__agy__agy_ask` | agy |
 
 - 切 Astra：`codex_ask` 时传 `model:"gpt-6-astra"`
-- 通用参数：`prompt`、`engine`、`cwd`、`timeoutSec`、`tools`、`fullAuto`
+- 通用参数：`prompt`、`engine`、`cwd`、`timeoutSec`、`tools`、`fullAuto`、`maxTurns`
 
 ## 冒烟
 ```
 <引擎>_ask(engine="<引擎>", prompt="Reply with exactly: <引擎>_OK")
 ```
-返回 `ok:true` + 纯文本 answer 即正常；stderr 里 502/rmcp 噪音可忽略。
+返回 `ok:true` + 非空纯文本 answer 即正常；stderr 里 502/rmcp 噪音可忽略。
 
 ## 桥侧改动须
-- 改 `cli-mcp/index.mjs` 后：`node --check index.mjs` → `mcp_connector_reconnect(key)` → 冒烟
-- Windows 下 .js 入口路径一律正斜杠；qwen spec 须 `shell:false`
+- 改 `cli-mcp/index.mjs`（由 `cli-mcp/index.template.mjs` 复制并填占位符）后：`node --check index.mjs` → `mcp_connector_reconnect(key)` → 冒烟
+- Windows 下 .js 入口路径一律正斜杠；qwen spec 须 `shell:false` 且用 `--prompt` 显式传值
+
+## 快速排障（症状→修复）
+- `qwen_ask` 空输出/exit0：路径改正斜杠 + `shell:false` + `--prompt`
+- MCP 工具没出现：补 `args: ["<绝对路径>\\cli-mcp\\index.mjs"]` 后 reconnect
+- CLI command not found：桥 `WIN_PATH_ADDITIONS` 加该 bin 目录
+- 401/Not logged in：单独跑该 CLI 重新登录
+- 详见 README §7「常见问题排查」
