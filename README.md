@@ -28,12 +28,15 @@ node --check cli-mcp\index.mjs
 
 | 任务类型 | 引擎 | 模型 | 说明 |
 |---|---|---|---|
-| 快速问答、小修、注释、单行 bug | **qwen** | qwen 默认 flash | 最快，几秒出 |
-| 国内落地、中文项目、收尾验证 | **codebuddy** | 本机默认 | 中文生态稳 |
+| 快速问答、小修、注释、单行 bug、跑命令 | **qwen** | qwen3.8-flash（免费默认） | 最快，几秒出 |
+| 复杂问题（比 flash 难一档） | **qwen** | qwen3.8-2.4t-a95b（免费） | 传 `model:"qwen3.8-2.4t-a95b"` |
+| 国内落地、中文项目、收尾验证、成品交付 | **codebuddy** | 本机默认 | 中文生态稳 |
 | 架构梳理、复杂 bug、跨文件重构 | **codex** | 默认 gpt-6.1-sol | 主力重活 |
-| 最难的活：疑难根因、关键设计决策、大跨度重构、6.1-sol 跑歪升级 | **codex + Astra** | gpt-6-astra | 烧额度极快，切换前报备 |
+| 最难的活：疑难根因、关键设计决策、大跨度重构、6.1-sol 跑歪升级 | **codex + Astra** | gpt-6-astra | 1M context 旗舰，烧额度极快，切换前报备 |
 | 最高难度决策、终审复核 | **claude** | 本机默认（sonnet/opus） | 走你的代理 |
 | gemini 系交叉验证 | **agy** | — | 地域受限时暂不可用 |
+
+> **qwen 免费/付费约束**：默认只用免费白名单（`qwen3.8-flash` + `qwen3.8-2.4t-a95b`）。付费模型（`qwen3.8-max`、`kimi-k3`、`glm-5.3`、`deepseek-*`）**调用前必须先向用户请求授权**，桥层拦截门会自动拒绝非白名单 model。`qwen-audio-3.1-tts-plus` 是 TTS 音频模型，文本端点拒收，文本场景不可用。
 
 ### 组合打法
 - **大活**：codex（6.1-sol / Astra）出架构 → claude 复核 → codebuddy 落地 → qwen/agy 交叉验证
