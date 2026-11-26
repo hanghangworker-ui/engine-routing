@@ -8,10 +8,10 @@ argument-hint: [engine]
 # 引擎路由 Skill
 
 ## 何时用
-- 用户要求「派个任务给 codex / qwen / claude / codebuddy」「用哪个引擎」「让某 CLI 跑一下」
+- 用户要求「派个任务给 codex / qwen / claude / codebuddy / agy」「用哪个引擎」「让某 CLI 跑一下」
 - 需要按任务复杂度选引擎 / 切 codex 模型
 
-## 路由准则 v2.1（默认）
+## 路由准则 v2.2（默认）
 
 | 任务 | 引擎 | 模型 | 备注 |
 |---|---|---|---|
@@ -21,12 +21,17 @@ argument-hint: [engine]
 | 架构梳理 / 跨文件重构 / 一般复杂 bug | `codex` | 默认 gpt-6.1-sol（不传 model） | 主力重活 |
 | 最难的活 / 疑难根因 / 6.1-sol 跑歪升级 | `codex` + `model:"gpt-6-astra"` | gpt-6-astra | 1M context 旗舰，烧额度极快，切前报备 |
 | 最高难度决策 / 终审复核 / 天花板 | `claude` | 本机默认（sonnet/opus） | 走代理 |
-| gemini 系交叉验证 | `agy` | — | 地域受限时跳过 |
+| gemini 系交叉验证 / 独立复核 | `agy` | — | 地域限制已解除，纳入常规派单 |
 
 ### 组合打法
-- **大活**：codex（6.1-sol 或 Astra）出架构 → qwen 快速执行 → codebuddy 收尾验证
+- **大活**：codex（6.1-sol 或 Astra）出架构 → claude 复核 → codebuddy 落地 → qwen/agy 交叉验证
 - **小活**：qwen 直接干（flash 打穿）
 - **国内项目**：codebuddy 主刀
+
+### agy 交叉验证（地域限制已解除）
+- agy 走 gemini 系，与主用引擎不同族，适合独立复核
+- 时机：关键决策 / 疑难根因 / 大跨度重构 / 交付前验收；常规小活不必每次跑
+- 做法：把同一任务或产物交 agy 独立复核，两方结论分歧时升级 claude 终审
 
 ### qwen 免费/付费模型约束（重要）
 - **免费白名单**（默认只用这些）：`qwen3.8-flash`（默认）+ `qwen3.8-2.4t-a95b`

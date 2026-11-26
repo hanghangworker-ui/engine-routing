@@ -34,7 +34,7 @@ node --check cli-mcp\index.mjs
 | 架构梳理、复杂 bug、跨文件重构 | **codex** | 默认 gpt-6.1-sol | 主力重活 |
 | 最难的活：疑难根因、关键设计决策、大跨度重构、6.1-sol 跑歪升级 | **codex + Astra** | gpt-6-astra | 1M context 旗舰，烧额度极快，切换前报备 |
 | 最高难度决策、终审复核 | **claude** | 本机默认（sonnet/opus） | 走你的代理 |
-| gemini 系交叉验证 | **agy** | — | 地域受限时暂不可用 |
+| gemini 系交叉验证 / 独立复核 | **agy** | — | 地域限制已解除，纳入常规派单 |
 
 > **qwen 免费/付费约束**：默认只用免费白名单（`qwen3.8-flash` + `qwen3.8-2.4t-a95b`）。付费模型（`qwen3.8-max`、`kimi-k3`、`glm-5.3`、`deepseek-*`）**调用前必须先向用户请求授权**，桥层拦截门会自动拒绝非白名单 model。`qwen-audio-3.1-tts-plus` 是 TTS 音频模型，文本端点拒收，文本场景不可用。
 
@@ -42,6 +42,7 @@ node --check cli-mcp\index.mjs
 - **大活**：codex（6.1-sol / Astra）出架构 → claude 复核 → codebuddy 落地 → qwen/agy 交叉验证
 - **小活**：qwen 直接干
 - **国内项目**：codebuddy 主刀
+- **交叉验证**：主用引擎交付前用 agy（gemini 系）独立复核；关键决策 / 疑难根因 / 交付前验收建议跑，常规小活可省；两方分歧升级 claude 终审
 
 ### codex 模型切换
 - 不传 `model` → CLI 默认 gpt-6.1-sol
@@ -58,7 +59,7 @@ node --check cli-mcp\index.mjs
 | codex | `npm i -g @openai/codex` | `OPENAI_API_KEY` / 订阅 | 需网络可达 OpenAI；可走代理 |
 | codebuddy | `npm i -g @tencent-ai/codebuddy` | 本机默认账号 | 腾讯系，中文稳 |
 | qwen | `npm i -g @qwen-code/qwen-code` | `QWENCLOUD_API_KEY`（写进 `~/.qwen/settings.json`） | 默认走 QwenCloud 中国端点 |
-| agy | 你的 agy 二进制路径 | 你的 token | 地域受限时不可用 |
+| agy | 你的 agy 二进制路径 | 你的 token | 地域限制已解除，可用 |
 
 > 装完用 `claude --version` / `codex --version` / `codebuddy --version` / `qwen --version` 确认在 PATH。
 > 若 npm 全局目录自设（非默认 `AppData\Roaming\npm`），记下该目录绝对路径，桥里要显式写进 `WIN_PATH_ADDITIONS`（见 §2.4）。
@@ -104,6 +105,7 @@ mcp__codex__codex_ask(engine="codex", prompt="Reply with exactly: CODX_OK")
 mcp__codex__codex_ask(engine="codex", prompt="Reply with exactly: ASTRA_OK", model="gpt-6-astra")
 mcp__codebuddy__buddy_ask(engine="codebuddy", prompt="Reply with exactly: BUDDY_OK")
 mcp__claude-code__cc_ask(engine="claude", prompt="Reply with exactly: CLAUDE_OK")
+mcp__agy__agy_ask(engine="agy", prompt="Reply with exactly: AGY_OK")
 ```
 
 返回 `ok:true` + 非空纯文本 `answer` 即通道正常。`stderr_tail` 里的 502 / rmcp 噪音不影响结果，可忽略。
@@ -167,7 +169,7 @@ qwen: {
 ```js
 agy: { bin: "<AGY_EXE_PATH>", stdio: "ignore",
   args: (p,o) => ["-p", q(p), "--output-format", "json", ...(o.model?["--model",o.model]:[])] }
-// 地域受限时不可用；连接可能被宿主丢弃需重建
+// 地域限制已解除；连接可能被宿主丢弃需重建
 ```
 
 ## 6. 终端命令速查
@@ -214,7 +216,7 @@ git push -u origin main
 - **宿主沙箱禁 create process**：宿主直接 spawn 任何 exe 报 EPERM，一切引擎调用必须走 MCP 桥
 - **npm 全局目录可自设**，宿主 PATH 快照未必含 → 桥 spec 用绝对路径 bin
 - **codex .codex 目录 ACL 只 RX** → `CODEX_DISABLE_SANDBOX=1` 绕过
-- **ag y 连接可能被宿主丢弃** → 需 `mcp_connector_configure` 重建
+- **agy 连接可能被宿主丢弃** → 需 `mcp_connector_configure` 重建
 
 ---
 配套文件：`cli-mcp/index.template.mjs`（桥本体模板）、`SKILL.md`（可触发技能，路由+冒烟固化）。
