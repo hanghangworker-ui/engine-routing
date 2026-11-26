@@ -7,6 +7,19 @@
 
 ---
 
+## 2026-11-26（二）
+
+### 路由准则 v2.3 — 按本机实测重订五家引擎模型
+- **文件**：`README.md`、`SKILL.md`
+- **改动**：
+  1. qwen 两档免费模型实测可用，保留 flash / 2.4t-a95b；注明直跑 CLI 会走 `agnes-3.0-flash`，与桥派单不一致
+  2. codex 默认由文档里的 `gpt-6.1-sol` 改为本机实际 `gpt-6.2-astra`（经 free-llm 映射 auto）
+  3. codebuddy 写明当前模型 `hy4flash-free`
+  4. claude 已重装 2.1.332 并接 DeepSeek Anthropic 端点：默认 `deepseek-flash[1m]`（1M context），最难档传 `model:"claude-opus-4-6"` 走 `deepseek-v4-pro`
+  5. agy 写明 `model: auto` 及可选 gemini-4-hydrogen / gemini-3.8-flash 等
+  6. 冒烟清单与排障表同步；SKILL.md 路由准则 v2.2 → v2.3
+- **回退**：`git reset --hard cff505e`
+
 ## 2026-11-26
 
 ### 路由准则 v2.2 — agy 地域限制解除，纳入常规交叉验证

@@ -24,30 +24,31 @@ node --check cli-mcp\index.mjs
 # 5. 冒烟（§4）
 ```
 
-## 1. 引擎与路由准则
+## 1. 引擎与路由准则（v2.3，2026-11-26 实测重订）
 
 | 任务类型 | 引擎 | 模型 | 说明 |
 |---|---|---|---|
-| 快速问答、小修、注释、单行 bug、跑命令 | **qwen** | qwen3.8-flash（免费默认） | 最快，几秒出 |
+| 快速问答、小修、注释、单行 bug、跑命令 | **qwen** | qwen3.8-flash（免费） | 最快，几秒出 |
 | 复杂问题（比 flash 难一档） | **qwen** | qwen3.8-2.4t-a95b（免费） | 传 `model:"qwen3.8-2.4t-a95b"` |
-| 国内落地、中文项目、收尾验证、成品交付 | **codebuddy** | 本机默认 | 中文生态稳 |
-| 架构梳理、复杂 bug、跨文件重构 | **codex** | 默认 gpt-6.1-sol | 主力重活 |
-| 最难的活：疑难根因、关键设计决策、大跨度重构、6.1-sol 跑歪升级 | **codex + Astra** | gpt-6-astra | 1M context 旗舰，烧额度极快，切换前报备 |
-| 最高难度决策、终审复核 | **claude** | 本机默认（sonnet/opus） | 走你的代理 |
-| gemini 系交叉验证 / 独立复核 | **agy** | — | 地域限制已解除，纳入常规派单 |
+| 国内落地、中文项目、收尾验证、成品交付 | **codebuddy** | hy4flash-free（本机默认） | 中文生态稳，免费 |
+| 架构梳理、复杂 bug、跨文件重构 | **codex** | gpt-6.2-astra（配置默认） | 经本机 free-llm 路由，reasoning=high |
+| 大代码库、长上下文、疑难根因 | **claude** | deepseek-flash[1m] | DeepSeek 后端，1M context |
+| 最高难度决策、终审复核、天花板 | **claude** | `model:"claude-opus-4-6"` → deepseek-v4-pro | DeepSeek 把 `claude-opus-*` 映射为 V4 Pro；烧额度，切前报备 |
+| gemini 系交叉验证 / 独立复核 | **agy** | auto（可指定 gemini-4-hydrogen / gemini-3.8-flash） | 不同模型族，独立复核 |
 
-> **qwen 免费/付费约束**：默认只用免费白名单（`qwen3.8-flash` + `qwen3.8-2.4t-a95b`）。付费模型（`qwen3.8-max`、`kimi-k3`、`glm-5.3`、`deepseek-*`）**调用前必须先向用户请求授权**，桥层拦截门会自动拒绝非白名单 model。`qwen-audio-3.1-tts-plus` 是 TTS 音频模型，文本端点拒收，文本场景不可用。
+> **qwen 免费/付费约束**：默认只用免费白名单（`qwen3.8-flash` + `qwen3.8-2.4t-a95b`）。付费模型（`qwen3.8-max`、`kimi-k3`、`glm-5.3`、`deepseek-*`）**调用前必须先向用户请求授权**，桥层拦截门会自动拒绝非白名单 model。`qwen-audio-3.1-tts-plus` 是 TTS 音频模型，文本端点拒收，文本场景不可用。直跑 qwen CLI（不经桥）会走 `~/.qwen/settings.json` 的 `agnes-3.0-flash`，与规则不一致。
 
 ### 组合打法
-- **大活**：codex（6.1-sol / Astra）出架构 → claude 复核 → codebuddy 落地 → qwen/agy 交叉验证
-- **小活**：qwen 直接干
+- **大活**：codex（`gpt-6.2-astra`）出架构 → claude（`deepseek-flash[1m]`）长上下文落地 → codebuddy 收尾验证 → agy 交叉验证
+- **最难活**：claude 传 `model:"claude-opus-4-6"` 走 `deepseek-v4-pro` 终审
+- **小活**：qwen flash 直接干
 - **国内项目**：codebuddy 主刀
-- **交叉验证**：主用引擎交付前用 agy（gemini 系）独立复核；关键决策 / 疑难根因 / 交付前验收建议跑，常规小活可省；两方分歧升级 claude 终审
+- **交叉验证**：交付前用 agy（gemini 系）独立复核；关键决策 / 疑难根因 / 验收建议跑，常规小活可省；两方分歧升级 claude（V4 Pro）终审
 
-### codex 模型切换
-- 不传 `model` → CLI 默认 gpt-6.1-sol
-- 派单时传 `model:"gpt-6-astra"` → 旗舰模型（1M context，能力最强，额度窗口内消耗最快）
-- 决策准则：任务够难 / 前次 6.1-sol 跑歪 → 升级 Astra；日常一律 6.1-sol
+### 模型与路由现状（实测）
+- **codex**：`gpt-6.2-astra` 来自本机 `~/.codex/config.toml`；`gpt-*` 经 free-llm 映射为 `auto`，实际后端由本机路由决定。
+- **claude**：已重装 2.1.332 并接入 DeepSeek Anthropic 端点；默认 `deepseek-flash[1m]`，`claude-opus-*` → `deepseek-v4-pro`，`claude-sonnet-*`/`claude-haiku-*` → `deepseek-flash`。启动时 `unrecognized_model` 警告属正常。
+- **agy**：`model: auto`（agnes provider），`agy models` 可列出 gemini-4-hydrogen(high/xhigh/medium/low)、gemini-3.8-flash(high/medium/low)、claude-sonnet-4-6、claude-opus-4-6-thinking、gpt-oss-120b-medium。
 
 ## 2. 安装各家 CLI + 配 token/代理
 
@@ -55,11 +56,11 @@ node --check cli-mcp\index.mjs
 
 | 引擎 | 安装 | 凭据/配置 | 备注 |
 |---|---|---|---|
-| claude | `npm i -g @anthropic-ai/claude-code`（或你的代理渠道 CLI） | `ANTHROPIC_API_KEY` 或代理账户（如 clodex.cc） | 走代理时确认余额 |
+| claude | `npm i -g @anthropic-ai/claude-code` | DeepSeek API Key（写进 `~/.claude/settings.json` 的 `ANTHROPIC_AUTH_TOKEN`） | 已接 DeepSeek Anthropic 端点，默认 `deepseek-flash[1m]` |
 | codex | `npm i -g @openai/codex` | `OPENAI_API_KEY` / 订阅 | 需网络可达 OpenAI；可走代理 |
-| codebuddy | `npm i -g @tencent-ai/codebuddy` | 本机默认账号 | 腾讯系，中文稳 |
-| qwen | `npm i -g @qwen-code/qwen-code` | `QWENCLOUD_API_KEY`（写进 `~/.qwen/settings.json`） | 默认走 QwenCloud 中国端点 |
-| agy | 你的 agy 二进制路径 | 你的 token | 地域限制已解除，可用 |
+| codebuddy | `npm i -g @tencent-ai/codebuddy` | 本机默认账号 | 当前模型 `hy4flash-free`，中文稳 |
+| qwen | `npm i -g @qwen-code/qwen-code` | `QWENCLOUD_API_KEY`（写进 `~/.qwen/settings.json`） | 桥派单走免费白名单；直跑走 `agnes-3.0-flash` |
+| agy | 你的 agy 二进制路径 | 你的 token | 地域限制已解除，`model: auto` |
 
 > 装完用 `claude --version` / `codex --version` / `codebuddy --version` / `qwen --version` 确认在 PATH。
 > 若 npm 全局目录自设（非默认 `AppData\Roaming\npm`），记下该目录绝对路径，桥里要显式写进 `WIN_PATH_ADDITIONS`（见 §2.4）。
@@ -101,10 +102,12 @@ node --check cli-mcp\index.mjs
 
 ```
 mcp__qwen__qwen_ask(engine="qwen", prompt="Reply with exactly: QWEN_BRIDGE_OK")
+mcp__qwen__qwen_ask(engine="qwen", prompt="Reply with exactly: A95B_OK", model="qwen3.8-2.4t-a95b")
 mcp__codex__codex_ask(engine="codex", prompt="Reply with exactly: CODX_OK")
-mcp__codex__codex_ask(engine="codex", prompt="Reply with exactly: ASTRA_OK", model="gpt-6-astra")
+mcp__codex__codex_ask(engine="codex", prompt="Reply with exactly: ASTRA_OK", model="gpt-6.2-astra")
 mcp__codebuddy__buddy_ask(engine="codebuddy", prompt="Reply with exactly: BUDDY_OK")
-mcp__claude-code__cc_ask(engine="claude", prompt="Reply with exactly: CLAUDE_OK")
+mcp__claude-code__cc_ask(engine="claude", prompt="Reply with exactly: DEEPSEEK_OK")
+mcp__claude-code__cc_ask(engine="claude", prompt="Reply with exactly: PRO_OK", model="claude-opus-4-6")
 mcp__agy__agy_ask(engine="agy", prompt="Reply with exactly: AGY_OK")
 ```
 
@@ -126,13 +129,14 @@ claude: {
   parse: /* 单 JSON，答案在 .result */
 }
 ```
+> claude 已接 DeepSeek Anthropic 端点：默认 `deepseek-flash[1m]`；传 `model:"claude-opus-4-6"` 走 `deepseek-v4-pro`（DeepSeek 映射）。启动时的 `unrecognized_model` 警告可忽略。
 
 ### codex（stdin 模式 + model 切换）
 ```js
 codex: {
   bin: "codex", stdio: "stdin",
   args: (p, o) => ["exec", ...(o.fullAuto?["--full-auto"]:[]),
-    ...(o.model ? ["--model", o.model] : []),   // 默认 6.1-sol；难活传 gpt-6-astra
+    ...(o.model ? ["--model", o.model] : []),   // 本机配置默认 gpt-6.2-astra；按需另传
     "--skip-git-repo-check", "--json"],
   parse: /* JSONL 事件流，末行 agent_message 即答案 */
 }
@@ -208,6 +212,7 @@ git push -u origin main
 | 改了 index.mjs 不生效 | 改完没重连 | `node --check` → `mcp_connector_reconnect(key)` → 冒烟 |
 | 编辑桥代码后路径全乱（多重 `\\`） | write/edit 对含反斜杠代码会双重转义 | 用 node 行级脚本改，路径写正斜杠 + ASCII 边界校验；改完读回验证 |
 | 沙箱里 `git push` 卡认证 / EPERM | 宿主沙箱禁 spawn remote-https / 非 tty 弹不了 GCM 框 | 在你**本地** PowerShell 推（用户名填账户，密码栏填 classic PAT，勾 `repo` scope） |
+| claude 打印 `unrecognized_model` 警告 | Claude Code 不认识 DeepSeek 自定义模型名 | 忽略；`modelUsage` 显示 `deepseek-*` 即已接通 |
 
 ## 8. 已知坑与教训（浓缩）
 
